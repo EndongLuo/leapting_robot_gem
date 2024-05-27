@@ -1,0 +1,51 @@
+{
+  "name": "leapting-robot-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon bin/www",
+    "debug": "node --inspect app.js",
+    "dev": "./node_modules/.bin/nodemon bin/www",
+    "prd": "pm2 start bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "debug": "^2.6.3",
+    "dxf-parser": "^1.1.2",
+    "ejs": "~2.3.3",
+    "ftp": "^0.3.10",
+    "jsonwebtoken": "^8.5.1",
+    "koa": "^2.2.0",
+    "koa-body": "^6.0.1",
+    "koa-bodyparser": "^3.2.0",
+    "koa-convert": "^1.2.0",
+    "koa-json": "^2.0.2",
+    "koa-jwt": "^3.5.1",
+    "koa-logger": "^2.0.1",
+    "koa-multer": "^1.0.2",
+    "koa-onerror": "^1.2.1",
+    "koa-router": "^7.1.1",
+    "koa-static": "^3.0.0",
+    "koa-views": "^5.2.1",
+    "koa2-cors": "^2.0.6",
+    "koa2-swagger-ui": "^5.8.0",
+    "md5": "^2.2.1",
+    "moment": "^2.18.1",
+    "moment-timezone": "^0.5.45",
+    "node-schedule": "^2.1.1",
+    "pg": "^8.11.1",
+    "pg-hstore": "^2.3.4",
+    "raw-body": "^2.4.0",
+    "roslib": "^1.4.1",
+    "sequelize": "^5.8.7",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.5",
+    "svg-captcha": "^1.4.0",
+    "swagger-jsdoc": "^6.2.8",
+    "xml2js": "^0.4.19"
+  },
+  "devDependencies": {
+    "nodemon": "^1.8.1"
+  }
+}
