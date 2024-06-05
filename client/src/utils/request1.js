@@ -4,7 +4,7 @@ import qs from 'qs';
 
 let service = axios.create({
   baseURL: 'report',
-  timeout: 5000 // 请求超时时间
+  timeout: 50000 // 请求超时时间
 });
 
 //请求

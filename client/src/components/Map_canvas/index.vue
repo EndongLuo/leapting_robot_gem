@@ -2,10 +2,10 @@
   <div @contextmenu.prevent>
     <div style="position: fixed; top: 100px;left: 300px; z-index: 1001;">
       <el-select v-model="changeBlock" :placeholder="changeBlock" @change="changeBlockChange">
-        <el-option v-for="b,i in blockName" :label="b" :value="b" :key="i"></el-option>
-      <!-- <el-option label="区域一" value="shanghai"></el-option>
+        <el-option v-for="b, i in blockName" :label="b" :value="b" :key="i"></el-option>
+        <!-- <el-option label="区域一" value="shanghai"></el-option>
       <el-option label="区域二" value="beijing"></el-option> -->
-    </el-select>
+      </el-select>
 
     </div>
     <l-map ref="map" @click="innerClick" style="height: calc(100vh - .15rem); width: 100%" :center="center"
@@ -17,14 +17,14 @@
         <l-polyline :lat-lngs="Robot[r.ip].navPath" :options="polylineOptions" />
       </div>
 
-      <l-geo-json :geojson="testJson" :options="testJsonOptions" :options-style="resetHighlight"></l-geo-json>
+      <l-geo-json :geojson="totalJson" :options="totalJsonOptions" :options-style="resetHighlight"></l-geo-json>
       <l-geo-json :geojson="geojson" :options="geoJsonOptions" :options-style="styleFunction"></l-geo-json>
 
       <l-marker v-if="isAddingMarker" :lat-lng="currentMarkerLatLng" :options="markerOp1" :icon="markerIcon"></l-marker>
       <l-marker v-if="isdot" :lat-lng="currentMarkerLatLng" :icon="dotIcon"></l-marker>
 
       <!-- <l-feature-group>
-        <l-geo-json :geojson="testJson" :options-style="e_fenceStyle"></l-geo-json>
+        <l-geo-json :geojson="totalJson" :options-style="e_fenceStyle"></l-geo-json>
         <l-polygon v-for="(p, i) in blocks" :key="i" :lat-lngs="p.position"></l-polygon>
       </l-feature-group> -->
 
@@ -49,16 +49,14 @@ import { getSiteName, getSiteInfo, getMapTree, updateSite, getMapBlock } from '@
 import { db } from "@/utils/db";
 import 'leaflet-rotatedmarker';
 import 'leaflet-draw';
-import aa from '../../views/PatrolInspection/test/grm.json';
-import bb from './json/4S.json'
 
 export default {
   props: ['initialpose', 'nowpose', 'IP'],
   data() {
     return {
-      list:[],
-      blockName:[],
-      changeBlock:localStorage.getItem('changeBlock')||localStorage.getItem('site'),
+      list: [],
+      blockName: [],
+      changeBlock: localStorage.getItem('changeBlock') || localStorage.getItem('site'),
       blocks: [
         {
           PVMID: 'B1_R1_S1_1',
@@ -168,34 +166,36 @@ export default {
       forceUpdate: 0,
       drawnItems: null,
       e_fence: null,
-      testJson: null,
-      testJsonOptions:null,
+      totalJson: null,
+      totalJsonOptions: null,
     };
   },
   components: { LMap, LIcon, LTileLayer, LMarker, LGeoJson, LControl, LPolyline, LPolygon, LTooltip, LFeatureGroup },
   async created() {
     this.site = localStorage.getItem('site')
     this.list = await db.maps.where("sitename").equals(`${this.site}`).toArray();
+    this.totalJson = this.list[0].total;
+    this.$store.commit('socket/SET_TOTALJSON', {totalJson:this.totalJson,P:this.list[0].P});
+    // console.log(this.list);
 
-    if (this.list.length) {
-      this.$loading.show();
-      // console.log(this.list[0].map);
-      this.geojson = this.list[0].map[`${this.changeBlock}`];
-      // this.geojson = JSON.parse(list[0].map);
-      this.center = JSON.parse(localStorage.getItem('center'))|| [0, 0];
-      this.zoom = this.list[0].zoom;
-      this.$loading.hide();
-    }
-    else this.changeMap();
+    // if (this.list.length) {
+    //   // this.$loading.show();
+    //   // console.log(this.list[0].map);
+    //   this.geojson = this.list[0].map[`${this.changeBlock}`];
+    //   // this.geojson = JSON.parse(list[0].map);
+    //   this.center = JSON.parse(localStorage.getItem('center'))|| [0, 0];
+    //   this.zoom = this.list[0].zoom;
+    //   // this.$loading.hide();
+    // }
+    // else this.changeMap();
 
     // test
     // const res = await getSiteInfo({ sitename: this.site });
-    this.blockName=this.list[0].blocks
-    console.log('test getSiteInfo',this.blockName.length);
+    this.blockName = this.list[0].blocks
 
   },
   computed: {
-    ...mapState('socket', ['Robot', 'ips', 'Robots', 'taskState', 'siteId','blockNames']),
+    ...mapState('socket', ['Robot', 'ips', 'Robots', 'taskState', 'siteId', 'blockNames']),
     ...mapGetters(['uid']),
     Robot() {
       return this.$store.state.socket.Robot;
@@ -214,15 +214,15 @@ export default {
     },
   },
   watch: {
-    blockNames(val, oldVal){
+    blockNames(val, oldVal) {
       try {
         console.log('watch blockName', val, oldVal);
-      this.changeBlock = val;
-      this.changeBlockChange();
+        this.changeBlock = val;
+        this.changeBlockChange(val);
       } catch (error) {
         console.log(error);
       }
-      
+
       // this.geojson = this.list[0].map[`${val}`];
       // var c = this.list[0].map[`${val}`].features[0].properties.center;
       // this.center = [c[1],c[0]];
@@ -273,22 +273,34 @@ export default {
   async mounted() {
 
     this.changeBlockChange()
-    this.testJson = bb;
-    // console.log(this.testJson);
+    // this.totalJson = bb;
+    // console.log(this.totalJson);
 
     // this.getSiteInfo();
     // this.initDraw();
 
     // console.log(this.navPath.length);
     this.geoJsonOptions = { onEachFeature: this.onEachFeatureFunction() }
-    this.testJsonOptions = { onEachFeature: this.onEachFeatureFunction1() }
-    
+    this.totalJsonOptions = { onEachFeature: this.onEachFeatureFunction1() }
+
 
     window.navGo = this.navGo;
   },
   methods: {
-    async changeBlockChange(){
-      console.log('changeBlock',this.changeBlock);
+    async changeBlockChange(block) {
+      block = block || this.changeBlock;
+      console.log('changeBlock', block);
+
+      // 获取当前Block的geoJson
+      var res = await getSiteInfo({ id: this.siteId, block })
+      // console.log(res.data);
+      this.geojson = res.data.map;
+      // console.log(res.data.map.features);
+      if (!res.data.map.features.length) return;
+      else {
+        var c = res.data.map.features[0].properties.center
+        this.center = [c[1], c[0]]
+      }
 
       // 获取当前Block的geoJson
       // var res = await getMapBlock({name:'map_grm_all',block:this.changeBlock})
@@ -296,26 +308,11 @@ export default {
       // this.blocks = res.data;
       // console.log(this.blocks);
 
-
-      // 获取当前Block的geoJson
-      var res = await getSiteInfo({id:this.siteId,block:this.changeBlock})
-      console.log(res.data.map);
-      this.geojson = res.data.map;
-      var c =  res.data.map.features[0].properties.center
-      this.center = [c[1],c[0]]
-
-      // console.log(this.list[0].map[`${this.changeBlock}`]);
-
       // this.geojson = this.list[0].map[`${this.changeBlock}`];
       // var c = this.list[0].map[`${this.changeBlock}`].features[0].properties.center;
       // this.center = [c[1],c[0]];
       // localStorage.setItem('changeBlock',this.changeBlock)
       // localStorage.setItem('center',JSON.stringify(this.center))
-      // GeoJson 图层
-      // console.log(aa);
-      // this.geojson = aa;
-      // console.log(this.geojson);
-      // this.geoJsonOptions = { onEachFeature: this.onEachFeatureFunction() } 
 
       // 在地图数据库中筛选Block
       // console.log(this.changeBlock);
@@ -479,12 +476,11 @@ export default {
     },
     innerClick(e) {
       // console.log(e.latlng.lat + ',' + e.latlng.lng);
-      this.$message.success(e.latlng.lat + ',' + e.latlng.lng);
+      // this.$message.success(e.latlng.lat + ',' + e.latlng.lng);
     },
     onEachFeatureFunction(taskState) {
       try {
         const { task_nodes, done_nodes, task_type } = this.taskState;
-        // const { task_nodes, done_nodes, task_type } = taskState;
         // 缓存常用属性
         const styleFunction = this.styleFunction.bind(this);
         const highlightStyle = this.highlightStyle;
@@ -492,72 +488,50 @@ export default {
         const taskNodeStyle = this.taskNodeStyle;
 
         return (feature, layer) => {
-          if (!feature) return
+          // console.log(feature);
+          if (!feature || !feature.properties) return
 
-          if (feature.properties.Block) {
-            const PVMID = feature.properties.Block;
-            const Layer = feature.properties.Layer;
-            if (!Layer) layer.setStyle(taskNodeStyle);
-
-            layer.bindTooltip(`<div>${PVMID}</div><div>${Layer ? '' : 'None Map'}</div>`);
-            layer.on({
-              // mouseover: () => layer.setStyle(highlightStyle),
-              // mouseout: () => layer.setStyle(styleFunction()),
-              click: (e) => {
-                if (Layer) this.changeMap(PVMID);
-                else this.$message('None Map')
-              }
-            });
-          }
-          else {
-            const PVMID = feature.properties.PVMID;
-            // console.log(task_type);
-            // 提前进行任务类型判断
-            if (task_type === 1 || task_type === 2) {
-              if (task_nodes.includes(PVMID)) {
-                if (done_nodes.includes(PVMID)) layer.setStyle(doneNodeStyle);
-                else layer.setStyle(taskNodeStyle);
-              }
+          const PVMID = feature.properties.PVMID;
+          // console.log(task_type);
+          // 提前进行任务类型判断
+          if (task_type === 1 || task_type === 2) {
+            if (task_nodes.includes(PVMID)) {
+              if (done_nodes.includes(PVMID)) layer.setStyle(doneNodeStyle);
+              else layer.setStyle(taskNodeStyle);
             }
-            layer.bindTooltip(`<div>${PVMID}</div>`, { permanent: false, sticky: true });
+          }
+          layer.bindTooltip(`<div>${PVMID}</div>`, { permanent: false, sticky: true });
 
-            layer.on({
-              mouseover: () => layer.setStyle(highlightStyle),
-              mouseout: () => layer.setStyle(styleFunction()),
-              click: (e) => {
-                e.target.bindPopup(` <div style="background-color: #36363688; display: flex;flex-wrap: wrap; justify-content: center; padding: 20px 0; color: #ececec;">
+          layer.on({
+            mouseover: () => layer.setStyle(highlightStyle),
+            mouseout: () => layer.setStyle(styleFunction()),
+            click: (e) => {
+              e.target.bindPopup(` <div style="background-color: #36363688; display: flex;flex-wrap: wrap; justify-content: center; padding: 20px 0; color: #ececec;">
           <div><span style="font-weight: 700;">PVMID:</span> ${PVMID}</div>
           <button onmouseover="this.style.backgroundColor='#27aae633'" onmouseout="this.style.backgroundColor='#6f6e6e88'" style="background-color: #6f6e6e88;margin: 20px 5px 0 5px; padding: 10px 20px; border-radius: 5px; color: #ececec;border:0; cursor: pointer;" onclick="navGo('${PVMID}','_z')">Go East</button>
           <button onmouseover="this.style.backgroundColor='#27aae633'" onmouseout="this.style.backgroundColor='#6f6e6e88'" style="background-color: #6f6e6e88;margin: 20px 5px 0 5px; padding: 10px 20px; border-radius: 5px; color: #ececec;border:0; cursor: pointer;" onclick="navGo('${PVMID}','_f')">Go West</button>
         </div>`)
-              }
-            });
-          }
+            }
+          });
         };
       } catch (error) {
-        console.log('taskState');
+        console.error('taskState error');
       }
     },
 
     onEachFeatureFunction1() {
       try {
-        // 缓存常用属性
-        const styleFunction = this.resetHighlight;
-        const highlightStyle = this.highlightStyle;
-
         return (feature, layer) => {
-          if (!feature) return
-
-          
-            const PVMID = feature.properties.PVMID;
-            layer.bindTooltip(`<div>${PVMID}</div>`, { permanent: false, sticky: true });
-
-            // layer.on({
-            //   mouseover: () => layer.setStyle(highlightStyle),
-            //   mouseout: () => layer.setStyle(styleFunction),
-            // });
-          }
-        
+          if (!feature) return;
+          const PVMID = feature.properties.PVMID;
+          layer.bindTooltip(`<div>${PVMID}</div>`, { permanent: false, sticky: true });
+          layer.on('dblclick', (event) => {
+            this.changeBlockChange(PVMID);
+            localStorage.setItem('changeBlock', PVMID);
+            // console.log(PVMID);
+            this.changeBlock = PVMID;
+          });
+        }
       } catch (error) {
         console.log('taskState');
       }

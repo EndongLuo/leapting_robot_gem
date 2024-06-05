@@ -22,6 +22,7 @@ class siteMapModel {
       map: data.map,
       center: data.center,
       blocks: data.blocks,
+      P: data.P,
       mapoffset: { to: 0, tx: 0, ty: 0, theta: 0 },
       e_fence: { type: 'FeatureCollection', features: [] },
       zoom: 0,

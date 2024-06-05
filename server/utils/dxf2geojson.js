@@ -1,7 +1,7 @@
 const fs = require('fs');
 const dxfParser = require('dxf-parser');
 
-async function dxf2geojson(dxf_file, block, toward) {
+async function dxf2geojson(dxf_file, P, toward) {
   const dxfContent = await fs.promises.readFile(`./public/uploads/DXF/${dxf_file}`, 'utf-8');
   const parser = new dxfParser();
   const dxf_data = parser.parseSync(dxfContent);
@@ -49,13 +49,13 @@ async function dxf2geojson(dxf_file, block, toward) {
     }
   });
 
-  return processJSON(geojson, toward);
+  return processJSON(geojson, P, toward);
 }
 
-function processJSON(geojson, toward) {
+function processJSON(geojson, P, toward) {
   const pvmInfo = [];
-  const diff = 1.68;
-  const P = 4;
+  const diff = 1.15;
+  // const diff = 1.68;
   const towardNumber = Number(toward); // 1:横向 0:纵向
   const blocks = ["All"];
 

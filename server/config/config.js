@@ -1,7 +1,7 @@
 module.exports = {
   db: {
-    // host: '10.168.4.100',
-    host: '192.168.8.152',
+    host: '10.168.4.100',
+    // host: '192.168.8.152',
     // host: '192.168.20.155',
     port: '5432',
     dialect: 'postgres',

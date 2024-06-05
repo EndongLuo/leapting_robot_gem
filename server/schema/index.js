@@ -53,7 +53,7 @@ TimedTask.belongsTo(Task);
 sequelize.sync();
 resultPool.sync();
 
-// Site.sync({ force: true })
+// Site.sync({ alter: true })
 
 module.exports = {
   User, Role, Site, Task, TimedTask, TaskInfo, Robot, ResultInfo, Security, rosParam

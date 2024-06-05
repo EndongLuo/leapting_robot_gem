@@ -2,22 +2,28 @@ import Vue from 'vue';
 import Socket from '@/utils/socketUtil';
 import { getRobot, getRobots, updateRobot, addRobot, deleteRobot } from '@/api/robot'
 let rePose = { '10.168.4.230': [] }, reNavPath = {};
-import bb from '@/components/Map_canvas/json/4S.json';
+
 
 const state = {
   socket: null,
   ips: ['10.168.4.230'],
+  nowIP: '10.168.4.230',
   taskState: {},
   siteId: localStorage.getItem('siteId') || "24",
   Robot: {},
   Robots: [],
-  bb: bb,
+  totalJson: null,
   blockNames: '4S',
+  P: null,
 }
 
 const mutations = {
   SET_SOCKET(state, socket) {
     state.socket = socket
+  },
+  SET_TOTALJSON(state, {totalJson,P}) {
+    state.totalJson = totalJson
+    state.P = P
   },
 
   SET_ROBOT(state, ip) {
@@ -40,17 +46,20 @@ const mutations = {
   },
 
   setRobotPose(state, { ip, d }) {
-    // console.log('setRobotPose', ip, d,bb);
+    // console.log('setRobotPose', ip, d,totalJson);
     const point = [d.position.y, d.position.x]
     const point1 = [d.position.x, d.position.y]
-    const fences = bb.features.map(i => ({
+    if (!state.totalJson) return;
+    const fences = state.totalJson.features.map(i => ({
       coordinates: i.geometry.coordinates[0],
-      PVMID: i.properties.PVMID 
+      PVMID: i.properties.PVMID
     }));
+    // console.log(fences);
     const PVMID = findPVMIDForPoint(point1, fences);
     // console.log('setRobotPose',  PVMID);
     state.blockNames = PVMID;
-    
+    localStorage.setItem('changeBlock', PVMID);
+
     if (!d.position.length) Vue.set(state.Robot[ip], 'robotPose', [-1000, -1000]);
     Vue.set(state.Robot[ip], 'robotPose', point);
     Vue.set(state.Robot[ip].markerOp, 'rotationAngle', d.orientation);
@@ -69,21 +78,21 @@ const mutations = {
 
   setTaskState(state, { ip, d }) {
     d.progress = ((d.done_nodes.length / d.task_nodes.length) * 100).toFixed(1);
-    var a = {...d}
-    Vue.set(state.Robot[ip], 'taskState1', a);
-    Vue.set(state.Robot[ip], 'taskState', d);
+    var a = { ...d }
+    Vue.set(state.Robot[ip], 'taskState1', d);
+    Vue.set(state.Robot[ip], 'taskState', a);
     Vue.set(state.Robot[ip], 'taskStatus', d.task_type == 1);
-    const P = 4;
+    // const P = 4;
 
-    if (ip === '10.168.4.240') {
-      const appendIndices = k => Array.from({ length: P }, (_, i) => k + '_' + (i + 1));
+    // if (ip === '10.168.4.240') {
+    if (ip === '192.168.20.123') {
+      const appendIndices = k => Array.from({ length: state.P }, (_, i) => k + '_' + (i + 1));
 
-      // state.taskState1 = d;
-
-      d.task_nodes = d.task_nodes.flatMap(appendIndices);
-      d.done_nodes = d.done_nodes.flatMap(appendIndices);
-      state.taskState = d;
+      a.task_nodes = a.task_nodes.flatMap(appendIndices);
+      a.done_nodes = a.done_nodes.flatMap(appendIndices);
+      state.taskState = a;
     }
+    // console.log('setTaskState',d.task_nodes.length, a.task_nodes.length);
 
     if (d.task_type === 1 || d.task_type === 2) state.Robot[ip].taskStatus = true;
     else state.Robot[ip].taskStatus = false;
@@ -105,6 +114,11 @@ const actions = {
       return item.ip;
     })
     Vue.set(state, 'ips', state.ips);
+
+    // console.log(state.siteId);
+    // const list = await db.maps.where("siteId").equals(`格尔木场地`).toArray();
+    // console.log(list);
+    // state.totalJson = list[0].total;
   },
   async init({ commit, dispatch, state }) {
     console.log('init');
@@ -205,7 +219,7 @@ const actions = {
 
   // 重定位
   initPose({ commit, state }, { ip, poses }) {
-    console.log('state initPose', ip, poses);
+    // console.log('state initPose', ip, poses);
     state.socket.emit('initPose', ip, poses);
   },
 

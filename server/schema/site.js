@@ -15,6 +15,8 @@ module.exports = (sequelize) => {
     blocks: JSONB,
     zoom: INTEGER,
     data_save: INTEGER,
+    P: INTEGER,
+    total: JSONB,
     mapoffset: JSONB,
     e_fence: JSONB,
     create_time: { type: DATE, defaultValue: DataTypes.NOW },

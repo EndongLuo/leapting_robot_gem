@@ -21,16 +21,14 @@
     </div>
 
     <div class="main">
-      <!-- {{ Robot['10.168.4.230'].robotPose }} -->
       <!-- 左边 -->
       <div class="left">
         <div class="task_title">{{ $t('setting.powerStation') }}</div>
 
         <div class="task_box">
-          <el-input :placeholder="$t('setting.zkey')" v-model="filterText">
-          </el-input>
+          <el-input :placeholder="$t('setting.zkey')" v-model="filterText"></el-input>
           <!-- <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree" lazy :load="loadTree" -->
-          <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree" 
+            <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree" 
             :filter-node-method="filterNode" :props="defaultProps">
           </el-tree>
         </div>
@@ -378,8 +376,8 @@
               <el-input v-model="siteInfo.lat_lng" autocomplete="off"></el-input>
             </el-form-item> -->
             <!-- ------------------------------------------------ -->
-            <el-form-item label="子阵" :label-width="formLabelWidth">
-              <el-input v-model="siteInfo.block" autocomplete="off"></el-input>
+            <el-form-item label="排布" :label-width="formLabelWidth">
+              <el-input v-model="siteInfo.P" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="组件朝向" :label-width="formLabelWidth">
               <!-- <el-input v-model="taskInfo.task_type" autocomplete="off"></el-input> -->
@@ -614,8 +612,8 @@ import { mapGetters, mapState } from 'vuex';
 
 import { formatDate, transTimestamp } from '@/utils/timeUTC'
 import { db } from "@/utils/db";
-import { processJSON } from "./test/dxf2geojson";
-import aa from './test/grm_all.json';
+// import { processJSON } from "./test/dxf2geojson";
+// import aa from './test/grm_all.json';
 export default {
   data() {
     return {
@@ -860,7 +858,7 @@ export default {
         map: '',
         fileName: '',
         toward: '',
-        block: ''
+        P: ''
       },
       site: localStorage.getItem('site') || '',
       siteId: localStorage.getItem('siteId') || '',
@@ -883,6 +881,8 @@ export default {
     };
   },
   async created() {
+    
+
     this.treeData= [{ label: this.site,children:[] }]
     var an = localStorage.getItem('activeName');
     if (an) this.activeName = an;
@@ -911,9 +911,6 @@ export default {
   computed: {
     ...mapState('socket', ["socket", 'ips', 'Robot', 'Robots', 'taskState', 'taskStatus', 'robotPose']),
     ...mapGetters(['roles', 'uid']),
-    // treeData(){
-    //   return [{ label: this.site,children:[] }];
-    // } 
   },
   watch: {
     activeName(val) {
@@ -956,6 +953,19 @@ export default {
     },
   },
   methods: {
+    // 懒加载tree
+    async loadTree(node, resolve) {
+      if (node.level === 0) {
+        resolve([{ label: this.site, id: 1 }]); 
+      } else if (node.level >= 1) {
+        console.log(node.data.label, node.level);
+        var tree1 = await getMapTree({ name: 'map_grm_all',label: node.data.label, level:node.level});
+        console.log(tree1);
+        // console.log(node.data.label);
+        // const children = this.treeData[0]?.children || [];
+        resolve(tree1.data);
+      }
+    },
     async deleteTimedTask(id) {
       var res = await deleteTimedTask(id)
       // console.log(res);
@@ -1002,51 +1012,12 @@ export default {
       console.log(robot);
       this.dialogUpdateRobot = false;
     },
-    // 懒加载tree
-    loadTree(node, resolve) {
-      // loadNode(node, resolve) {
-      // 假设你有一个获取节点子节点数据的API
-      fetchNodeChildren(node.data.id).then(childrenData => {
-        // 将子节点数据注入当前节点
-        resolve(childrenData);
-      });
-    // },
-      // console.log(node);
-      // if (node.level === 0) { // 初始的级数（最顶层）
-      //   return resolve([{ label: this.site }]); // 最顶层数据渲染为region
-      // }
-      // if (node.level >= 1){
-      //   console.log(node.id,node.key);
-      //   // const children = this.getChildrenByNodeId(node.id);
-      //   return resolve([]);
-      // } 
-    },
-    getChildrenByNodeId(id) {
-      const node = this.findNodeById(this.treeData, id);
-      return (node && node.children) ? node.children : [];
-    },
-    findNodeById(nodes, id) {
-      for (let node of nodes) {
-        if (node.id === id) {
-          return node;
-        } else if (node.children) {
-          const found = this.findNodeById(node.children, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    },
-    async getload(node,resolve){
-      console.log(node.key);
-      var tree1 = await getMapTree({ name: 'map_grm_all', id: this.siteId });
-      return resolve(tree1.data);
-    },
     // 获取tree
     async getTree() {
       console.time('1')
       var list = await db.maps.where("sitename").equals(`${this.site}`).toArray();
       if (list.length) this.treeData = JSON.parse(list[0].tree);
-      console.log(JSON.parse(list[0].tree));
+      // console.log(JSON.parse(list[0].tree));
       console.timeEnd('1')
     },
     async setSiteName(siteId, site, tablename) {
@@ -1066,20 +1037,20 @@ export default {
         }
         else {
           const res = await getSiteInfo({ id: siteId });
-          console.log(res.data);
-          const { center, zoom, map, blocks } = res.data;
+          // console.log(res.data);
+          const { center, zoom, map, blocks, total, P } = res.data;
           localStorage.setItem('center', JSON.stringify(center));
 
-          console.log(map);
+          // console.log(map);
 
           this.$loading.hide();
           var tree1 = await getMapTree({ name: tablename, id: siteId });
           this.treeData = tree1.data;
           var tree = JSON.stringify(tree1.data);
 
-          // var as = await db.maps.add({ siteId, sitename: site, center, zoom, map, tree });
-          var as = await db.maps.add({ siteId, sitename: site, blocks, center, zoom, map });
-          console.log(as);
+          var as = await db.maps.add({ siteId, sitename: site, center, blocks, zoom, map, tree, total, P });
+          // var as = await db.maps.add({ siteId, sitename: site, blocks, center, zoom, map });
+          // console.log(as);
         }
       } catch (error) {
         console.log("error in chengeMap: ", error);

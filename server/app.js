@@ -22,6 +22,12 @@ const router = require('./routes/index');
 // error handler
 onerror(app)
 
+
+app.use(bodyparser({
+  'formLimit':'10mb',
+  'jsonLimit':'10mb',
+  'textLimit':'10mb',
+}))
 // middlewares
 app.use(bodyparser({
   enableTypes: ['json', 'form', 'text']

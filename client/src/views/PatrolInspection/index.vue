@@ -915,7 +915,7 @@ $count: 600;
   z-index: 100;
 
   .task_box {
-    // backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     // background-color: #1eaefc23;
     // border: .05rem solid transparent;
     border: 1px solid #0f6ab031;
@@ -946,7 +946,7 @@ $count: 600;
   }
 
   .l-top {
-    // backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     font-size: .1rem;
     border: .1rem solid transparent;
     // border-image: url('./img/border.png') 33 stretch;
@@ -958,7 +958,7 @@ $count: 600;
   }
 
   .l_bottom {
-    // backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     background: #24242438;
     border: .1rem solid transparent;
     // border-image: url('./img/box02.png') 33 stretch;
@@ -973,7 +973,7 @@ $count: 600;
   z-index: 100;
 
   .vehicle {
-    // backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     background: #24242438;
     border: .1rem solid transparent;
     // border-image: url('./img/box02.png') 33 stretch;
@@ -989,7 +989,7 @@ $count: 600;
   }
 
   .r_bottom {
-    // backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1054,7 +1054,7 @@ $count: 600;
 }
 
 .under {
-  // backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   position: absolute;
   margin-bottom: .1rem;
   width: 60%;

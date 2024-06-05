@@ -58,7 +58,6 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: { '^/video': '' }
       },
-
     }
   },
   // css: {

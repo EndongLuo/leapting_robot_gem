@@ -5,6 +5,7 @@ const arrayToTree = require('../utils/arrayToTree');
 const fs = require('fs');
 const util = require('util');
 const path = require('path');
+let tree = [];
 
 // 使用util.promisify将fs.unlink转换为返回Promise的函数，便于使用async/await
 const unlinkAsync = util.promisify(fs.unlink);
@@ -20,7 +21,7 @@ class siteMapController {
       const req = ctx.request.body;
       req.tablename = `map_${req.fileName.split('.')[0]}`;
 
-      const dxf2geojsonPromise = dxf2geojson(req.fileName, req.block, req.toward);
+      const dxf2geojsonPromise = dxf2geojson(req.fileName, req.P, req.toward);
       const initTablePromise = siteMapModel.init(req.tablename);
 
       const res = await dxf2geojsonPromise;
@@ -112,8 +113,8 @@ class siteMapController {
       const req = ctx.request.body;
       if (req.id) {
         res = await siteMapModel.getSiteInfo(req.id);
-        if(req.block) res[0].map = res[0].map[req.block];
-        else res[0].map = res[0].map['All'];
+        // console.log(req.block,res[0].map[req.block]);
+        res[0].map = res[0].map[req.block||'All'];
       }
       // else if (req.sitename) res = await siteMapModel.getSiteBlock(req.sitename);
 
@@ -161,26 +162,36 @@ class siteMapController {
  */
   static async getMapTree(ctx) {
     try {
-      const { name, id } = ctx.request.body;
+      const { name, id, label, level } = ctx.request.body;
       // var name1 = 'map_wj,map_wj1'
-      console.log(name, id);
+      console.log(name, id, label);
 
-      // 并行获取多个场地信息
-      const names = name.split(',');
-      const siteMaps = await Promise.all(names.map(n => siteMapModel.getMap(n)));
-      const results = siteMaps.flat(); // 将所有结果合并到一个数组中
+      // 获取场地信息
+      if (!tree.length) {
+        const res = await siteMapModel.getMap(name);
+        tree = arrayToTree(res);
+      }
 
-      // 获取电子围栏
-      const [{ dataValues: { e_fence: { features } } }] = await siteMapModel.getSiteEfence(id);
-      const fences = features.map(i => i.geometry.coordinates[0]);
 
-      // 过滤掉在任何电子围栏内的点
-      const Points = results.filter(point =>
-        !fences.some(fence => isPointInPolygon(point.center, fence))
-      );
+      // const filteredData = newTree(tree, label, level);
+      // console.log(filteredData);
 
-      if (Points.length) {
-        var tree = arrayToTree(Points);
+
+      // // 并行获取多个场地信息
+      // const names = name.split(',');
+      // const siteMaps = await Promise.all(names.map(n => siteMapModel.getMap(n)));
+      // const results = siteMaps.flat(); // 将所有结果合并到一个数组中
+
+      // // 获取电子围栏
+      // const [{ dataValues: { e_fence: { features } } }] = await siteMapModel.getSiteEfence(id);
+      // const fences = features.map(i => i.geometry.coordinates[0]);
+
+      // // 过滤掉在任何电子围栏内的点
+      // const Points = results.filter(point => !fences.some(fence => isPointInPolygon(point.center, fence)));
+
+      // if (Points.length) {
+      if (tree.length) {
+        // var tree = arrayToTree(Points);
         ctx.body = { code: 200, msg: '获取mapTree成功', data: tree };
       } else ctx.body = { code: 400, msg: '获取mapTree失败' };
     } catch (error) {
@@ -289,6 +300,28 @@ class siteMapController {
 }
 
 module.exports = siteMapController;
+
+function newTree(treeData, label, level) {
+  let result = [];
+
+  function findNode(data, label) {
+    for (const node of data) {
+      if (node.label === label||node.num == label) {
+        if (node.children) {
+          result = node.children.map(child => ({ id: child.id, label: child.label }));
+        }
+        return;
+      }
+      if (node.children) {
+        findNode(node.children, label);
+      }
+    }
+  }
+
+  findNode(treeData, label);
+  return result;
+}
+
 
 function isPointInPolygon(point, polygon) {
   let [x, y] = point;
