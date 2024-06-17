@@ -17,16 +17,19 @@ module.exports = function arrayToTree(data) {
     }
 
     let currentNode = sitenameNode;
+    // const levels = [block, row, section, num];
+    const levels = [
+      { label: block, id: block },
+      { label: row, id: `${block}_${row}` },
+      { label: section, id: `${block}_${row}_${section}` },
+      { label: num, id: `${block}_${row}_${section}_${num}` },
+    ];
 
-    [block, row, section, num].forEach((label, idx) => {
+    levels.forEach(({label, id}, idx) => {
       let nextNode = currentNode.children.find((node) => node.label === label);
 
       if (!nextNode) {
-        nextNode = {
-          id: currentNode.children.length + 11,
-          label: label,
-          children: [],
-        };
+        nextNode = { id, label, children: [] };
         currentNode.children.push(nextNode);
 
         if (idx === 0) {  // 这是 block 层, 需要对 children 进行排序

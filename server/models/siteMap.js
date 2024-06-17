@@ -1,6 +1,6 @@
 const { Site, User } = require('../schema/index')
 const { sequelize } = require("../config/db");
-const { Op, Sequelize } = require('sequelize');
+const { Op, Sequelize, where } = require('sequelize');
 
 class siteMapModel {
   static baseMap; // 静态属性，用于存储 baseMap
@@ -76,7 +76,7 @@ class siteMapModel {
   static async getMapOffset(id) {
     return await Site.findAll({
       where: { id },
-      attributes: ['mapoffset'],
+      attributes: ['mapoffset', 'tablename'],
     });
   }
 
@@ -91,7 +91,7 @@ class siteMapModel {
   static async getSiteEfence(id) {
     return await Site.findAll({
       where: { id },
-      attributes:['e_fence'],
+      attributes: ['e_fence'],
     });
   }
 
@@ -119,12 +119,26 @@ class siteMapModel {
     });
   }
 
+  static async getMapPVMID(mapName, {block, row, section, num}) {
+    this.init(mapName);
+
+    const whereClause = {};
+    if (block !== undefined) whereClause.block = block;
+    if (row !== undefined) whereClause.row = row;
+    if (section !== undefined) whereClause.section = section;
+    if (num !== undefined) whereClause.num = num;
+    return await this.baseMap.findAll({
+      where: whereClause,
+      attributes: ['PVMID'],
+    });
+  }
+
   // 获取block
-  static async getMapBlock(mapName,block) {
+  static async getMapBlock(mapName, block) {
     this.init(mapName)
     return await this.baseMap.findAll({
       where: { block },
-      attributes: [ 'PVMID', 'position'],
+      attributes: ['PVMID', 'position'],
     });
   }
 

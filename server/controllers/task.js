@@ -1,4 +1,5 @@
 const TaskModel = require('../models/task');
+const siteMapModel = require('../models/siteMap');
 const path = require('path');
 const { generateDateTimeArray } = require('../utils/timedArr');
 const moment = require('moment');
@@ -12,8 +13,31 @@ class TaskController {
   static async createTask(ctx) {
     try {
       const data = ctx.request.body;
-      // console.log(data);
-      const res = await TaskModel.createTask(data);
+      const nodesSet = new Set();
+      const nodeParts = data.nodes.split(',');
+
+      // 准备所有的whereClauses
+      const whereClauses = nodeParts.map(part => {
+        const [block, row, section, num] = part.split('_');
+        return { block, row, section, num };
+      });
+
+      // 批量查询
+      const allMaps = await Promise.all(whereClauses.map(whereClause =>
+        siteMapModel.getMapPVMID(data.mapName, whereClause)
+      ));
+
+      // 处理所有的查询结果
+      for (const map of allMaps) {
+        for (const item of map) {
+          const trimmedPVMID = item.PVMID.slice(0, -2);
+          nodesSet.add(trimmedPVMID);
+        }
+      }
+
+      const nodes = Array.from(nodesSet);
+      console.log('createTask nodes:', nodes.length);
+      const res = await TaskModel.createTask({ ...data, nodes: nodes.join(',') });
 
       if (res) {
         console.log('创建任务成功');
@@ -162,7 +186,7 @@ class TaskController {
     // console.log(id);
     try {
       var res = await TaskModel.getTaskInfo();
-      if (id == 0)  res = transformData(res); 
+      if (id == 0) res = transformData(res);
       else {
         res.forEach(i => {
           i.task.isback = i.task.isback == 'charge' ? 'Yes' : 'No';
@@ -505,7 +529,7 @@ function transformData(data) {
 
   // 提取键和值，并排序日期
   const dates = Object.keys(tempData).sort((a, b) => a.localeCompare(b));
-  const values = dates.map(date => (tempData[date]* 2.278).toFixed(2));
+  const values = dates.map(date => (tempData[date] * 2.278).toFixed(2));
 
   return { x: dates, y: values };
 };

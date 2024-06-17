@@ -441,7 +441,7 @@ export default {
         this.isUnder = false
       }
       else this.$message.error(`${this.$t('home.isMobile')}`);
-
+      this.isShow = 1;
       console.log(ptzurl);
       this.IP = ip;
       this.PTZURL = ptzurl;

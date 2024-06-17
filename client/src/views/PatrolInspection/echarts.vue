@@ -230,7 +230,7 @@ export default {
       };
 
       option.series[0].data = [
-        { value: `${Normal}`, name: 'Normal' },
+        // { value: `${Normal}`, name: 'Normal' },
         { value: `${clean}`, name: 'Clean' },
         { value: `${infrared}`, name: 'Infrared' },
         { value: `${connector}`, name: 'Connector' },

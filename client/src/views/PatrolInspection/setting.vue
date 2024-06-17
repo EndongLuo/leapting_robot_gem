@@ -27,9 +27,9 @@
 
         <div class="task_box">
           <el-input :placeholder="$t('setting.zkey')" v-model="filterText"></el-input>
-          <!-- <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree" lazy :load="loadTree" -->
-            <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree" 
-            :filter-node-method="filterNode" :props="defaultProps">
+          <!-- <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree"  -->
+          <el-tree :data="treeData" show-checkbox :default-expanded-keys="[0]" node-key="id" ref="tree" lazy
+            :load="loadTree" :filter-node-method="filterNode" :props="defaultProps" >
           </el-tree>
         </div>
       </div>
@@ -650,7 +650,8 @@ export default {
       treeData: [],
       defaultProps: {
         children: 'children',
-        label: 'label'
+        label: 'label',
+        isLeaf: 'leaf'
       },
       dotName: '',
       dialogFormVisible: false,
@@ -881,14 +882,12 @@ export default {
     };
   },
   async created() {
-    
-
-    this.treeData= [{ label: this.site,children:[] }]
+    this.treeData = [{ label: this.site, children: [] }]
     var an = localStorage.getItem('activeName');
     if (an) this.activeName = an;
     else localStorage.setItem('activeName', this.activeName);
 
-    this.getTree();
+    // this.getTree();
     this.getTask();
     this.getRobot();
 
@@ -955,14 +954,13 @@ export default {
   methods: {
     // 懒加载tree
     async loadTree(node, resolve) {
+      var tablename = localStorage.getItem('tablename')
       if (node.level === 0) {
-        resolve([{ label: this.site, id: 1 }]); 
+        resolve([{ label: this.site, id: 1 }]);
       } else if (node.level >= 1) {
-        console.log(node.data.label, node.level);
-        var tree1 = await getMapTree({ name: 'map_grm_all',label: node.data.label, level:node.level});
-        console.log(tree1);
-        // console.log(node.data.label);
-        // const children = this.treeData[0]?.children || [];
+        // console.log(node.data.label, node.level);
+        var tree1 = await getMapTree({ name: tablename, label: node.data.label, treeId: node.data.id });
+        // console.log(tree1.data);
         resolve(tree1.data);
       }
     },
@@ -1013,13 +1011,13 @@ export default {
       this.dialogUpdateRobot = false;
     },
     // 获取tree
-    async getTree() {
-      console.time('1')
-      var list = await db.maps.where("sitename").equals(`${this.site}`).toArray();
-      if (list.length) this.treeData = JSON.parse(list[0].tree);
-      // console.log(JSON.parse(list[0].tree));
-      console.timeEnd('1')
-    },
+    // async getTree() {
+    //   console.time('1')
+    //   var list = await db.maps.where("sitename").equals(`${this.site}`).toArray();
+    //   if (list.length) this.treeData = JSON.parse(list[0].tree);
+    //   // console.log(JSON.parse(list[0].tree));
+    //   console.timeEnd('1')
+    // },
     async setSiteName(siteId, site, tablename) {
       try {
         this.$loading.show();
@@ -1027,29 +1025,28 @@ export default {
         this.site = site;
         localStorage.setItem('site', site);
         localStorage.setItem('siteId', siteId);
+        localStorage.setItem('tablename', tablename);
         this.$store.dispatch('socket/getRobot', siteId);
-        this.getTree();
+        // this.getTree();
+        this.treeData = [{ label: site, children: [] }];
 
         var list = await db.maps.where("sitename").equals(`${site}`).toArray();
         if (list.length) {
           this.$loading.hide();
           localStorage.setItem('center', JSON.stringify(list[0].center));
+          localStorage.setItem('zoom', list[0].zoom);
         }
         else {
           const res = await getSiteInfo({ id: siteId });
           // console.log(res.data);
           const { center, zoom, map, blocks, total, P } = res.data;
           localStorage.setItem('center', JSON.stringify(center));
-
-          // console.log(map);
+          localStorage.setItem('zoom', zoom);
 
           this.$loading.hide();
-          var tree1 = await getMapTree({ name: tablename, id: siteId });
-          this.treeData = tree1.data;
-          var tree = JSON.stringify(tree1.data);
+          this.treeData = [{ label: site, children: [] }];
 
-          var as = await db.maps.add({ siteId, sitename: site, center, blocks, zoom, map, tree, total, P });
-          // var as = await db.maps.add({ siteId, sitename: site, blocks, center, zoom, map });
+          var as = await db.maps.add({ siteId, sitename: site, center, blocks, zoom, map, total, P, tablename });
           // console.log(as);
         }
       } catch (error) {
@@ -1273,25 +1270,25 @@ export default {
 
     // 添加任务的按钮
     btnTask() {
-      var dotName = this.$refs.tree.getCheckedKeys().filter(i => isNaN(i))
+      // var dotName = this.$refs.tree.getCheckedKeys().filter(i => isNaN(i))
+      var dotName = this.$refs.tree.getCheckedKeys()
+      console.log(dotName);
       if (!dotName.length) {
         this.$message.error(`${this.$t('setting.choosearea')}`);
         return;
       }
-      // console.log(dotName.join(','));
 
-      const seen = new Set();
-      const result = dotName.reduce((acc, node) => {
-        const trimmed = node.slice(0, -2);
-        if (!seen.has(trimmed)) {
-          seen.add(trimmed);
-          acc.push(trimmed);
-        }
-        return acc;
-      }, []);
-      console.log(result);
-      var nodes = result.join(',');
-      this.taskInfo.nodes = nodes;
+      // const seen = new Set();
+      // const result = dotName.reduce((acc, node) => {
+      //   const trimmed = node.slice(0, -2);
+      //   if (!seen.has(trimmed)) {
+      //     seen.add(trimmed);
+      //     acc.push(trimmed);
+      //   }
+      //   return acc;
+      // }, []);
+      this.taskInfo.nodes = dotName.join(',');
+      this.taskInfo.mapName = localStorage.getItem('tablename');
       this.dialogFormVisible = true;
     },
 

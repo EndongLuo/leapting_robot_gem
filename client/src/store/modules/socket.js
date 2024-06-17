@@ -7,7 +7,8 @@ let rePose = { '10.168.4.230': [] }, reNavPath = {};
 const state = {
   socket: null,
   ips: ['10.168.4.230'],
-  nowIP: '10.168.4.230',
+  // nowIP: '192.168.12.230',
+  nowIP: '192.168.20.123',
   taskState: {},
   siteId: localStorage.getItem('siteId') || "24",
   Robot: {},
@@ -82,10 +83,8 @@ const mutations = {
     Vue.set(state.Robot[ip], 'taskState1', d);
     Vue.set(state.Robot[ip], 'taskState', a);
     Vue.set(state.Robot[ip], 'taskStatus', d.task_type == 1);
-    // const P = 4;
-
-    // if (ip === '10.168.4.240') {
-    if (ip === '192.168.20.123') {
+    
+    if (ip === state.nowIP) {
       const appendIndices = k => Array.from({ length: state.P }, (_, i) => k + '_' + (i + 1));
 
       a.task_nodes = a.task_nodes.flatMap(appendIndices);
@@ -114,11 +113,6 @@ const actions = {
       return item.ip;
     })
     Vue.set(state, 'ips', state.ips);
-
-    // console.log(state.siteId);
-    // const list = await db.maps.where("siteId").equals(`格尔木场地`).toArray();
-    // console.log(list);
-    // state.totalJson = list[0].total;
   },
   async init({ commit, dispatch, state }) {
     console.log('init');
@@ -225,7 +219,7 @@ const actions = {
 
   // 急停 暂停 继续
   async pauseTask({ commit, state }, { ip, num, taskId }) {
-    const { id, recognition_type, task_name, task_nodes, back_node } = state.Robot[ip].taskState1
+    const { id, recognition_type, task_name, task_nodes, back_node } = state.Robot[ip].taskState1;
     const taskmsg = {//#类型： 1：运行 0:停止 2:暂停
       id, task_type: num, recognition_type, task_name, back_node, task_nodes,
     }

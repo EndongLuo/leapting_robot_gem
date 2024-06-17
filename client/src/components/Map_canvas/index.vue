@@ -71,6 +71,7 @@ export default {
       dots: [],
       mapOptions: {
         // dragging: false, // 禁止拖动
+        maxZoom: 5,
         attributionControl: false,
         doubleClickZoom: false,
         crs: CRS.EPSG4326,
@@ -176,6 +177,7 @@ export default {
     this.list = await db.maps.where("sitename").equals(`${this.site}`).toArray();
     this.totalJson = this.list[0].total;
     this.$store.commit('socket/SET_TOTALJSON', {totalJson:this.totalJson,P:this.list[0].P});
+    this.zoom = JSON.parse(localStorage.getItem('zoom')) || 0;
     // console.log(this.list);
 
     // if (this.list.length) {
@@ -475,7 +477,7 @@ export default {
       this.$emit('change', '')
     },
     innerClick(e) {
-      // console.log(e.latlng.lat + ',' + e.latlng.lng);
+      console.log(e.latlng.lat + ',' + e.latlng.lng);
       // this.$message.success(e.latlng.lat + ',' + e.latlng.lng);
     },
     onEachFeatureFunction(taskState) {
