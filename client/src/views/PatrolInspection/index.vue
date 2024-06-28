@@ -105,8 +105,8 @@
             </el-dropdown-menu>
           </el-dropdown>
         </div>
-        <swiper class="swiper" style="width: 100%;" :options="swiperOption" ref="mySwiper">
-          <swiper-slide v-for="r in Robots" :key="r.id">
+        <swiper class="swiper" style="width: 100%;" :options="swiperOption" ref="mySwiper" @slideChange="onSlideChange">
+          <swiper-slide v-for="r in Robots" :key="r.id" :id="r.ip">
             <div class="vehicle">
               <!-- 巡检 -->
               <div class="task_box">
@@ -362,18 +362,6 @@ export default {
   components: { inspection, scrollList, Map_canvas, Telecontrol, Charts, Swiper, SwiperSlide, },
   computed: {
     ...mapState('socket', ['Robot', 'Robots', 'taskState']),
-    Robot() {
-      // console.log('+++++',this.$store.state.socket.Robot);
-      return this.$store.state.socket.Robot;
-    }
-  },
-  watch: {
-    Robot: {
-      handler(newValue, oldValue) {
-        // console.log('++++++用户配置已更新', newValue);
-      },
-      deep: true
-    },
   },
   async created() {
     this.$store.dispatch('socket/init');
@@ -405,18 +393,20 @@ export default {
         console.log('网络离线');
       }
     },
+    onSlideChange() {
+      const swiper = this.$refs.mySwiper.$swiper;
+      const activeSlide = swiper.slides[swiper.activeIndex];
+      const ip = activeSlide.id;
+      console.log('Current slide ID:', ip);
+      localStorage.setItem('nowIP', ip);
+      this.$store.commit('socket/SET_NOWIP', ip);
+    },
     // 下拉框切换robot
     handleCommand(index) {
-      console.log(index);
+      // console.log(index);
       const swiper = this.$refs.mySwiper.$swiper;
       // 设置 activeIndex 到指定的索引
       swiper.slideTo(index);
-    },
-    onSwiper(swiper) {
-      console.log(swiper);
-    },
-    onSlideChange() {
-      console.log('slide change');
     },
     diagnosticIp(ip) {
       this.diagnosticList = true;

@@ -8,7 +8,7 @@ module.exports = function arrayToTree(data) {
 
     if (!sitenameNode) {
       sitenameNode = {
-        id: tree.length + 1,
+        id: sitename,
         label: sitename,
         children: [],
       };

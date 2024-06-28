@@ -21,6 +21,7 @@ class TaskController {
         const [block, row, section, num] = part.split('_');
         return { block, row, section, num };
       });
+      // console.log('createTask whereClauses:', whereClauses);
 
       // 批量查询
       const allMaps = await Promise.all(whereClauses.map(whereClause =>

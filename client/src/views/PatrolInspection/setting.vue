@@ -117,7 +117,7 @@
           </el-tab-pane>
 
           <!-- 定时任务 -->
-          <el-tab-pane label="定时任务" name="8">
+          <el-tab-pane :label="$t('setting.timedtask')" name="8">
             <div class='moduleTable'>
               <el-table class="table-color"
                 :data="timedTaskData.filter(data => !search1 || data.task.task_name.toLowerCase().includes(search1.toLowerCase()))"
@@ -956,7 +956,7 @@ export default {
     async loadTree(node, resolve) {
       var tablename = localStorage.getItem('tablename')
       if (node.level === 0) {
-        resolve([{ label: this.site, id: 1 }]);
+        resolve([{ label: this.site, id: this.site }]);
       } else if (node.level >= 1) {
         // console.log(node.data.label, node.level);
         var tree1 = await getMapTree({ name: tablename, label: node.data.label, treeId: node.data.id });
@@ -1027,7 +1027,10 @@ export default {
         localStorage.setItem('siteId', siteId);
         localStorage.setItem('tablename', tablename);
         this.$store.dispatch('socket/getRobot', siteId);
-        // this.getTree();
+        var robot = await getRobot(siteId);
+        // console.log(robot.data[0].ip);
+        this.$store.commit('socket/SET_NOWIP', robot.data[0].ip);
+        localStorage.setItem('nowIP', robot.data[0].ip);
         this.treeData = [{ label: site, children: [] }];
 
         var list = await db.maps.where("sitename").equals(`${site}`).toArray();
@@ -1213,6 +1216,12 @@ export default {
     async handleStart(row) {
       console.log('任务下发');
       const { recognition_type, task_name, isback, nodes, robot } = row;
+      if (this.Robot[robot.ip].taskStatus) {
+        console.log(robot.robotname,'任务正在运行中');
+        // this.$message(`${this.$t('setting.none2')}`);
+        this.$message(`${robot.robotname}正在执行任务...`);
+        return
+      }
       const recognitionTypes = { 'Visible light': 1, 'Infrared light': 2, 'Mix': 3, };
       // console.log(nodes);
       var task_nodes = nodes.split(',')
@@ -1229,7 +1238,7 @@ export default {
       // console.log('任务下发',this.Robot);
       var taskData = { id, task_odom: 0, task_state: 1, taskId: row.id, start_time: this.Robot[robot.ip].taskState.start_time }
       var res = await setTaskInfo(taskData);
-      console.log(res);
+      console.log('setTaskInfo',res);
 
       this.goback()
       // 获取任务信息
@@ -1270,8 +1279,8 @@ export default {
 
     // 添加任务的按钮
     btnTask() {
-      // var dotName = this.$refs.tree.getCheckedKeys().filter(i => isNaN(i))
-      var dotName = this.$refs.tree.getCheckedKeys()
+      // var dotName = this.$refs.tree.getCheckedKeys().filter(i => isNaN(i));
+      var dotName = this.$refs.tree.getCheckedKeys();
       console.log(dotName);
       if (!dotName.length) {
         this.$message.error(`${this.$t('setting.choosearea')}`);

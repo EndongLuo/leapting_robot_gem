@@ -1,6 +1,6 @@
 <template>
   <div @contextmenu.prevent>
-    <div style="position: fixed; top: 11%;left: 20%; z-index: 1001;">
+    <div style="position: fixed; top: 100px;left: 300px; z-index: 1001;">
       <el-select v-model="changeBlock" :placeholder="changeBlock" @change="changeBlockChange">
         <el-option v-for="b, i in blockName" :label="b" :value="b" :key="i"></el-option>
         <!-- <el-option label="区域一" value="shanghai"></el-option>
@@ -10,8 +10,6 @@
     </div>
     <l-map ref="map" @click="innerClick" style="height: calc(100vh - .15rem); width: 100%" :center="center"
       :options="mapOptions" :zoom="zoom" @mousedown="startAddingMarker" @mouseup="stopAddingMarker">
-      <!-- <l-map ref="map" @click="innerClick" style="height: calc(100vh - .15rem); width: 100%" :center="center"
-      :options="mapOptions" :zoom="zoom" @mousedown="startAddingMarker"> -->
       <div v-for="r in Robots" :key="r.id">
 
         <l-polyline :lat-lngs="Robot[r.ip].navPath" :options="polylineOptions" />
@@ -30,29 +28,15 @@
         </l-marker>
       </div>
 
-      <!-- <l-marker-cluster>
-          <l-marker v-for="m, i in Robot[IP].scanPoints" :key="i" :lat-lng="[m.y, m.x]"
-            :icon="scanPointsIcon"></l-marker>
-        </l-marker-cluster> -->
-
       <l-geo-json :geojson="lz" :options="lzJsonOptions" :options-style="resetHighlight"></l-geo-json>
 
       <l-geo-json :geojson="totalJson" :options="totalJsonOptions" :options-style="resetHighlight"></l-geo-json>
       <l-geo-json :geojson="geojson" :options="geoJsonOptions" :options-style="styleFunction"></l-geo-json>
 
-      <!-- <l-marker :key="markerOp1.rotationAngle" v-if="isAddingMarker" :lat-lng="currentMarkerLatLng" :options="markerOp1" :icon="markerIcon"></l-marker> -->
-      <l-marker :key="markerOp1.rotationAngle" v-if="isAddingMarker" :lat-lng="currentMarkerLatLng" :options="markerOp1"
-        :icon="markerIcon"></l-marker>
+      <l-marker v-if="isAddingMarker" :lat-lng="currentMarkerLatLng" :options="markerOp1" :icon="markerIcon"></l-marker>
       <l-marker v-if="isdot" :lat-lng="currentMarkerLatLng" :icon="dotIcon"></l-marker>
 
 
-      <!-- <l-marker v-if="isAddingMarker" :lat-lng="currentMarkerLatLng" :options="markerOp1" :icon="markerIcon"></l-marker> -->
-      <div v-if="isAddingMarker" class="adjustment-icons" style="position: absolute; top: 20%; right: 29%;">
-        <div v-for="(icon, index) in adjustmentIcons" :key="index" :style="icon.style"
-          @click="adjustMarker(icon.action)">
-          <img class="img-icon" :src="icon.src" />
-        </div>
-      </div>
 
       <!-- <l-feature-group>
         <l-geo-json :geojson="totalJson" :options-style="e_fenceStyle"></l-geo-json>
@@ -91,17 +75,6 @@ export default {
   props: ['initialpose', 'nowpose', 'IP'],
   data() {
     return {
-      nowIP:localStorage.getItem('newIP'),
-      adjustmentIcons: [
-        { action: 'up', src: require('./img/up.png'), style: { top: '-50px', left: '0px' } },
-        { action: 'down', src: require('./img/down.png'), style: { top: '50px', left: '0px' } },
-        { action: 'left', src: require('./img/left.png'), style: { top: '0px', left: '-50px' } },
-        { action: 'right', src: require('./img/right.png'), style: { top: '0px', left: '50px' } },
-        { action: 'rotateCW', src: require('./img/rn.png'), style: { top: '-50px', left: '-50px' } },
-        { action: 'rotateCCW', src: require('./img/rs.png'), style: { top: '-50px', left: '50px' } },
-        { action: 'confirm', src: require('./img/confirm.png'), style: { top: '50px', left: '50px' } },
-        { action: 'cancel', src: require('./img/cancel.png'), style: { top: '50px', left: '-50px' } },
-      ],
       lz: null,
       scanPointsIcon: L.icon({
         iconUrl: require('./img/cp.png'), // 自定义图标的路径
@@ -241,7 +214,7 @@ export default {
   },
   components: { LMap, LIcon, LTileLayer, LMarker, LGeoJson, LControl, LPolyline, LPolygon, LTooltip, LFeatureGroup, LMarkerCluster },
   async created() {
-    // console.log(lz);
+    console.log(lz);
     this.lz = lz;
     this.site = localStorage.getItem('site')
     this.list = await db.maps.where("sitename").equals(`${this.site}`).toArray();
@@ -267,7 +240,7 @@ export default {
 
   },
   computed: {
-    ...mapState('socket', ['Robot', 'ips', 'Robots', 'taskState', 'siteId', 'blockNames',]),
+    ...mapState('socket', ['Robot', 'ips', 'Robots', 'taskState', 'siteId', 'blockNames']),
     ...mapGetters(['uid']),
     Robot() {
       return this.$store.state.socket.Robot;
@@ -316,8 +289,7 @@ export default {
     nowpose(val, oldVal) {
       // console.log('watch nowpose', val, oldVal); 
       this.center = val
-    },
-
+    }
   },
 
   async mounted() {
@@ -338,97 +310,29 @@ export default {
     window.navGo = this.navGo;
   },
   methods: {
-    // 调整marker
-    adjustMarker(action) {
-      var step = 0.1;
-      var angle = 5;
-      const [lat, lng] = this.currentMarkerLatLng;
-      switch (action) {
-        case 'up':
-          this.currentMarkerLatLng = [lat + step, lng];
-          break;
-        case 'down':
-          this.currentMarkerLatLng = [lat - step, lng];
-          break;
-        case 'left':
-          this.currentMarkerLatLng = [lat, lng - step];
-          break;
-        case 'right':
-          this.currentMarkerLatLng = [lat, lng + step];
-          break;
-        case 'rotateCW':
-          this.markerOp1.rotationAngle -= angle;
-          break;
-        case 'rotateCCW':
-          this.markerOp1.rotationAngle += angle;
-          break;
-        case 'confirm':
-          this.closeMarker(true);
-          break;
-        case 'cancel':
-          this.closeMarker(false);
-          break;
+    getArrowIcon(index) {
+      if (index === 0 || index >= this.navPath.length - 1) {
+        return new L.DivIcon({
+          className: 'arrow-icon',
+          html: `<div><img src="path/to/arrow-icon.png" style="width: 20px; height: 20px;" /></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
       }
-      this.$store.commit('socket/SET_MARKER',{c:this.currentMarkerLatLng,r:this.markerOp1.rotationAngle} );
-      // console.log(this.currentMarkerLatLng, this.markerOp1.rotationAngle);
+      const angle = this.calculateAngle(this.navPath[index], this.navPath[index + 1]);
+      return new L.DivIcon({
+        className: 'arrow-icon',
+        html: `<div style="transform: rotate(${angle}deg);"><img src="path/to/arrow-icon.png" style="width: 20px; height: 20px;" /></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
     },
-    startAddingMarker(e) {
-      if (!this.initialpose) return;
-      if (this._isMobile()) {
-        if (this.count == 1) {
-          this.isdot = true;
-          this.currentMarkerLatLng = [e.latlng.lat, e.latlng.lng];
-          this.count = 2;
-        }
-        else {
-          this.isdot = false;
-          this.rotationFn(e);
-          this.count = 1;
-        }
-      }
-      else {
-        e.target.dragging.disable() // 禁止拖动
-        this.isStart = true;
-        this.isdot = true;
-        this.currentMarkerLatLng = [e.latlng.lat, e.latlng.lng]
-      }
+    calculateAngle(pointA, pointB) {
+      const deltaY = pointB[0] - pointA[0];
+      const deltaX = pointB[1] - pointA[1];
+      const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+      return angle;
     },
-    stopAddingMarker(e) {
-      if (!this.isStart) return;
-      this.isdot = false;
-      this.rotationFn(e);
-      this.isStart = false;
-    },
-    rotationFn(e) {
-      const deltaX = e.latlng.lat - this.currentMarkerLatLng[0];
-      const deltaY = e.latlng.lng - this.currentMarkerLatLng[1];
-      var rawRotation = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
-      this.markerOp1.rotationAngle = (rawRotation + 360) % 360;
-
-      this.$store.commit('socket/SET_MARKER',{c:this.currentMarkerLatLng,r:this.markerOp1.rotationAngle} );
-
-      this.isAddingMarker = true;
-      e.target.dragging.enable();
-      this.$emit('change', '')
-    },
-    closeMarker(flag) {
-      let timer = null;
-      if (timer) clearTimeout(timer);
-      if(flag) this.$store.dispatch('socket/initPose', {
-        ip: this.IP,
-        poses: {
-          position: { x: this.currentMarkerLatLng[1], y: this.currentMarkerLatLng[0] },
-          orientation: this.markerOp1.rotationAngle
-        }
-      })
-
-      timer = setTimeout(() => {
-        this.isAddingMarker = false;
-        this.currentMarkerLatLng = [0, 0];
-        this.$store.commit('socket/CLOSE_MARKER');
-      }, 10)
-    },
-
     async changeBlockChange(block) {
       block = block || this.changeBlock;
       console.log('changeBlock', block);
@@ -561,9 +465,63 @@ export default {
       let flag = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
       return flag
     },
+    startAddingMarker(e) {
+      if (!this.initialpose) return;
+      // if (this._isMobile()) {
+        if (this.count == 1) {
+          this.isdot = true;
+          this.currentMarkerLatLng = [e.latlng.lat, e.latlng.lng];
+          this.count = 2;
+        }
+        else {
+          this.isdot = false;
+          this.rotationFn(e);
+          this.count = 1;
+        }
+      // }
+      // else {
+      //   e.target.dragging.disable() // 禁止拖动
+      //   this.isStart = true;
+      //   this.isdot = true;
+      //   this.currentMarkerLatLng = [e.latlng.lat, e.latlng.lng]
+      // }
+    },
+    stopAddingMarker(e) {
+      if (!this.isStart) return;
+      this.isdot = false;
+      this.rotationFn(e);
+      this.isStart = false;
+    },
+    rotationFn(e) {
+      // console.log(3);
+      let timer = null;
+      if (timer) clearTimeout(timer);
 
+      const deltaX = e.latlng.lat - this.currentMarkerLatLng[0];
+      const deltaY = e.latlng.lng - this.currentMarkerLatLng[1];
+      var rawRotation = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
+      this.markerOp1.rotationAngle = (rawRotation + 360) % 360;
+
+      this.isAddingMarker = true;
+
+      this.$store.dispatch('socket/initPose', {
+        ip: this.IP,
+        poses: {
+          position: { x: this.currentMarkerLatLng[1], y: this.currentMarkerLatLng[0] },
+          orientation: this.markerOp1.rotationAngle
+        }
+
+      })
+
+      timer = setTimeout(() => {
+        this.isAddingMarker = false;
+        this.currentMarkerLatLng = [0, 0];
+        e.target.dragging.enable();
+      }, 1000)
+      this.$emit('change', '')
+    },
     innerClick(e) {
-      // console.log(e.latlng.lat + ',' + e.latlng.lng);
+      console.log(e.latlng.lat + ',' + e.latlng.lng);
       // this.$message.success(e.latlng.lat + ',' + e.latlng.lng);
     },
     onEachFeatureFunction() {
@@ -633,7 +591,7 @@ export default {
       try {
         return (feature, latlng) => {
           return L.circleMarker(latlng, {
-            radius: feature.properties.radius * 50, // Adjust the radius as needed
+            radius: feature.properties.radius*50, // Adjust the radius as needed
             color: 'red'
           });
         }
@@ -689,36 +647,6 @@ export default {
 @import '~leaflet-draw/dist/leaflet.draw.css';
 @import '../../styles/element.scss';
 
-.adjustment-icons {
-  position: relative;
-  z-index: 3001;
-
-}
-
-.adjustment-icons div {
-  position: absolute;
-  border: #373535a2;
-  background: #0000006e;
-  border-radius: 50%;
-  width: 45px;
-  height: 45px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-
-  &:hover {
-    background: #5f5e5e99;
-    border: #17b8e0;
-  }
-}
-
-.img-icon {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  position: absolute;
-}
 
 .custom-marker-icon {
   transition: transform 0.3s ease;

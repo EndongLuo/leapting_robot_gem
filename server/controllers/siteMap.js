@@ -162,15 +162,15 @@ class siteMapController {
   static async getMapTree(ctx) {
     try {
       const { name, id, label, treeId } = ctx.request.body;
-      console.log(name, label, treeId);
+      console.log('label', label, 'treeId', treeId);
 
-      if(!tree[name]){
+      if (!tree[name]) {
         const res = await siteMapModel.getMap(name);
         tree[name] = arrayToTree(res);
       }
 
       const filteredData = newTree(tree[name], label, treeId);
-      // console.log(filteredData);
+      console.log(filteredData);
 
 
       // // 并行获取多个场地信息
@@ -298,132 +298,51 @@ class siteMapController {
 module.exports = siteMapController;
 
 
-function newTree(treeData, label, treeId) {
-  let targetNode = null;
-  const stack = [];
-  let stackIndex = 0;
-
-  // 初始将treeData中的所有节点加入栈中
-  for (let i = treeData.length - 1; i >= 0; i--) {
-    stack[stackIndex++] = treeData[i];
-  }
-
-  // 使用一个哈希表来快速查找节点
-  const nodeMap = new Map();
-  while (stackIndex > 0) {
-    const node = stack[--stackIndex];
-    nodeMap.set(node.id, node);
-
-    if (node.label === label || node.id === treeId) {
-      targetNode = node;
-      break; // 找到目标节点后立即停止遍历
-    }
-
-    if (node.children) {
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        stack[stackIndex++] = node.children[i]; // 将子节点加入栈中
-      }
-    }
-  }
-
-  if (targetNode && targetNode.children) {
-    const result = new Array(targetNode.children.length);
-    for (let i = 0; i < targetNode.children.length; i++) {
-      const child = targetNode.children[i];
-      result[i] = {
-        id: child.id,
-        label: child.label,
-        leaf: !child.children || child.children.length === 0
-      };
-    }
-    return result;
-  }
-
-  return [];
-}
-
-
 // function newTree(treeData, label, treeId) {
-//   const nodeMap = new Map();
 //   let targetNode = null;
+//   const stack = [];
+//   let stackIndex = 0;
 
-//   function buildMap(data) {
-//     for (const node of data) {
-//       nodeMap.set(node.id, node);
-//       // 找到目标节点后提前返回
-//       if (node.label === label || node.id === treeId) {
-//         targetNode = node;
-//         return true;
-//       }
-//       if (node.children && buildMap(node.children)) {
-//         return true; // 递归返回找到的信号
-//       }
-//     }
-//     return false;
+//   // 初始将treeData中的所有节点加入栈中
+//   for (let i = treeData.length - 1; i >= 0; i--) {
+//     stack[stackIndex++] = treeData[i];
 //   }
 
-//   buildMap(treeData);
+//   // 使用一个哈希表来快速查找节点
+//   const nodeMap = new Map();
+//   while (stackIndex > 0) {
+//     const node = stack[--stackIndex];
+//     nodeMap.set(node.id, node);
+
+//     if (node.label === label || node.id === treeId) {
+//       targetNode = node;
+//       break; // 找到目标节点后立即停止遍历
+//     }
+
+//     if (node.children) {
+//       for (let i = node.children.length - 1; i >= 0; i--) {
+//         stack[stackIndex++] = node.children[i]; // 将子节点加入栈中
+//       }
+//     }
+//   }
 
 //   if (targetNode && targetNode.children) {
-//     return targetNode.children.map(child => ({
-//       id: child.id,
-//       label: child.label,
-//       leaf: !child.children || child.children.length === 0
-//     }));
+//     const result = new Array(targetNode.children.length);
+//     for (let i = 0; i < targetNode.children.length; i++) {
+//       const child = targetNode.children[i];
+//       result[i] = {
+//         id: child.id,
+//         label: child.label,
+//         leaf: !child.children || child.children.length === 0
+//       };
+//     }
+//     return result;
 //   }
 
 //   return [];
 // }
-// function newTree(treeData, label, treeId) {
-//   const nodeMap = new Map();
-//   let targetNode = null;
 
-//   function buildMap(data) {
-//     for (const node of data) {
-//       nodeMap.set(node.id, node);
-//       if (node.label === label || node.id === treeId) {
-//         targetNode = node;
-//       }
-//       if (node.children) {
-//         buildMap(node.children);
-//       }
-//       if (targetNode) return; // 找到目标节点后提前返回
-//     }
-//   }
 
-//   buildMap(treeData);
-
-//   let result = [];
-//   if (targetNode && targetNode.children) {
-//     result = targetNode.children.map(child => ({ id: child.id, label: child.label, leaf: !child.children || child.children.length === 0 }));
-//   }
-
-//   return result;
-// }
-// function newTree(treeData, label, treeId) {
-//   const nodeMap = new Map();
-
-//   function buildMap(data) {
-//     data.forEach(node => {
-//       nodeMap.set(node.id, node);
-//       if (node.children) {
-//         buildMap(node.children);
-//       }
-//     });
-//   }
-
-//   buildMap(treeData);
-
-//   let result = [];
-//   let targetNode = Array.from(nodeMap.values()).find(node => node.label === label || node.id === treeId);
-//   if (targetNode) {
-//     if (targetNode.children) {
-//       result = targetNode.children.map(child => ({ id: child.id, label: child.label, leaf: !child.children || child.children.length === 0 }));
-//     }
-//   }
-
-//   return result;
-// }
 // function newTree(treeData, label, treeId) {
 //   let result = [];
 
@@ -449,6 +368,32 @@ function newTree(treeData, label, treeId) {
 //   findNode(treeData);
 //   return result;
 // }
+
+function newTree(treeData, label, treeId) {
+  let result = [];
+
+  function findNode(data) {
+    for (const node of data) {
+      if (node.label === label && node.id === treeId) {
+        if (node.children) {
+          result = node.children.map(child => ({ id: child.id, label: child.label, leaf: !child.children || child.children.length === 0 }));
+        }
+        return true;  // 节点找到，提前返回
+      } else if (node.id === treeId) {
+        result = node.children.map(child => ({ id: child.id, label: child.label, leaf: true }));
+        return true;  // 节点找到，提前返回
+      }
+
+      if (node.children && findNode(node.children)) {
+        return true;  // 节点找到，提前返回
+      }
+    }
+    return false;  // 节点未找到
+  }
+
+  findNode(treeData);
+  return result;
+}
 
 function isPointInPolygon(point, polygon) {
   let [x, y] = point;

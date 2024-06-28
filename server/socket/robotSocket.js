@@ -131,6 +131,12 @@ function robotSocket(ip, socket) {
     });
     socket.emit('diagnostic', ip, { status, list });
   });
+
+  // 点云
+  robot.scanPoints(msg => socket.emit('scanPoints', ip, msg));
+
+  // 立柱地图
+  robot.pillarMap(msg => socket.emit('pillarMap', ip, msg)) 
   // --------------------------------------------------------
 
   return robot; // 返回 robot 实例

@@ -46,8 +46,8 @@ request.get = function(url, params = null) {
       .get(url, { params })
       .then(res => {
         if (res.code == 500) {
-          reject('接口请求错误');
-          message.error(res.message || '接口请求错误');
+          reject(res.msg || '接口请求错误');
+          message.error(res.msg || '接口请求错误');
         } else {
           resolve(res);
         }
@@ -70,8 +70,8 @@ request.post = function(url, params) {
       .post(url, params)
       .then(res => {
         if (res.code == 500) {
-          reject('接口请求错误');
-          message.error(res.message || '接口请求错误');
+          reject(res.msg || '接口请求错误');
+          message.error(res.msg || '接口请求错误');
         } else {
           resolve(res);
         }
@@ -94,8 +94,8 @@ request.put = function(url, params) {
       .put(url, params)
       .then(res => {
         if (res.code == 500) {
-          reject('接口请求错误');
-          message.error(res.message || '接口请求错误');
+          reject(res.msg || '接口请求错误');
+          message.error(res.msg || '接口请求错误');
         } else {
           resolve(res);
         }
@@ -118,8 +118,8 @@ request.delete = function(url, params) {
       .delete(url, {params})
       .then(res => {
         if (res.code == 500) {
-          reject('接口请求错误');
-          message.error(res.message || '接口请求错误');
+          reject(res.msg || '接口请求错误');
+          message.error(res.msg || '接口请求错误');
         } else {
           resolve(res);
         }

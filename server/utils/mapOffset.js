@@ -28,11 +28,13 @@ class MapTransformer {
     }
   }
 
-  mapOffset(poses) {
+  mapOffset(poses,points) {
+    if (points) return points.map(i => this.poseFn(i));
     if (Array.isArray(poses)) return poses.map(i => ({
       pose: { position: this.poseFn(i.pose.position), orientation: this.orienteFn(i.pose.orientation) }
     }));
     else return { position: this.poseFn(poses.position), orientation: this.orienteFn(poses.orientation) };
+    
   }
 
   mapInverseOffset(poses) {

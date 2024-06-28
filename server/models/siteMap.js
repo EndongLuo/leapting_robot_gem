@@ -119,16 +119,15 @@ class siteMapModel {
     });
   }
 
-  static async getMapPVMID(mapName, {block, row, section, num}) {
+  static async getMapPVMID(mapName, whereClause) {
     this.init(mapName);
 
-    const whereClause = {};
-    if (block !== undefined) whereClause.block = block;
-    if (row !== undefined) whereClause.row = row;
-    if (section !== undefined) whereClause.section = section;
-    if (num !== undefined) whereClause.num = num;
-    return await this.baseMap.findAll({
-      where: whereClause,
+    const filteredWhereClause = Object.fromEntries(
+      Object.entries(whereClause).filter(([key, value]) => value !== undefined)
+    );
+
+    return this.baseMap.findAll({
+      where: filteredWhereClause,
       attributes: ['PVMID'],
     });
   }

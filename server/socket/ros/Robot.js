@@ -148,6 +148,16 @@ class Robot extends EventEmitter {
     return this.subscribeTopic('/diagnostics_agg', 'diagnostic_msgs/DiagnosticArray', callback);
   }
 
+  // 点云
+  scanPoints(callback) {
+    return this.subscribeTopic('/scan_points', 'sensor_msgs/PointCloud', msg => callback(transformer.mapOffset('',msg.points)));
+  }
+
+  // 立柱地图
+  pillarMap(callback) {
+    return this.subscribeTopic('/map_show', 'nav_msgs/OccupancyGrid', callback);
+  }
+
   // --------------------------------------------------------
 }
 
